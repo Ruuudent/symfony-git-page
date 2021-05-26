@@ -44,4 +44,13 @@ class User {
     public function __getRepos(): array {
         return $this->repos;
     }
+
+    public function __getUserData(): array {
+        return [
+            'profile' => self::__getProfile(),
+            'website' => self::__getWebsite(),
+            'orgs' => self::__getOrgs(),
+            'repos' => self::__getRepos()
+        ];
+    }
 }

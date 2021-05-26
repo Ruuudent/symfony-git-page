@@ -18,6 +18,9 @@ class GitHubService implements GitInterface
     private $client;
     private $userName;
     private $parameters;
+    private $userData;
+    private $reposData;
+    private $orgsData;
 
     /**
      * LabService constructor.
@@ -30,42 +33,57 @@ class GitHubService implements GitInterface
         $this->parameters = $parameters;
     }
 
-    public function _setUserName(string $name): void {
+    /**
+     * @param string $name
+     */
+    public function _setUserName(string $name): void
+    {
         $this->userName = $name;
     }
 
-    public function _getUserName(): string {
+    /**
+     * @return string
+     */
+    public function _getUserName(): string
+    {
         return $this->userName;
     }
 
     /**
-     * @return User
      * @throws ClientExceptionInterfaceAlias
      * @throws RedirectionExceptionInterface
      * @throws ServerExceptionInterface
      * @throws TransportExceptionInterface
      */
-    public function getServiceData(): User
+    public function _setUserData(): void
     {
-        // Getting basic user information
-        $userData = json_decode($this->client->request("GET", self::gitAPI . '/users/' . $this->_getUserName(),
+        $this->userData = json_decode($this->client->request("GET", self::gitAPI . '/users/' . $this->_getUserName(),
             ['auth_basic' => $this->parameters->get('app.github.auth')])->getContent());
+    }
 
-        //Getting Repos Information --- getting only 10 to limit the data for test purposes
-        $reposRaw = json_decode($this->client->request("GET", $userData->repos_url . '?per_page=10',
+    /**
+     * @return \stdClass
+     */
+    public function _getUserData(): \stdClass
+    {
+        return $this->userData;
+    }
+
+    /**
+     * @throws ClientExceptionInterfaceAlias
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws TransportExceptionInterface
+     */
+    public function _setReposData(): void
+    {
+        $reposData = $reposLanguageDetails = [];
+
+        $reposRaw = json_decode($this->client->request("GET", $this->_getUserData()->repos_url . '?per_page=10',
             ['auth_basic' => $this->parameters->get('app.github.auth')])->getContent());
-        $reposTotalNumber = $userData->public_repos;
-
-        //Getting Organisations Information --- getting only 10 to limit the data for test purposes
-        $organizationsData = json_decode($this->client->request("GET", $userData->organizations_url . '?per_page=10',
-            ['auth_basic' => $this->parameters->get('app.github.auth')])->getContent(), true);
-
-        $reposLanguageDetails = [];
-        $reposData = [];
 
         //Parsing each repo for additional data
-        foreach($reposRaw as $repo)
-        {
+        foreach ($reposRaw as $repo) {
             //Parsing repos in the format
             $reposData[$repo->name] = $repo;
 
@@ -76,9 +94,8 @@ class GitHubService implements GitInterface
             $languagePercentages = [];
 
             // Calculating percentage for language ussage
-            foreach($languages as $languageName => $languageValue)
-            {
-                $languagePercentages[$languageName] = number_format( $languageValue / $totalNumberOfLines * 100, 4 );
+            foreach ($languages as $languageName => $languageValue) {
+                $languagePercentages[$languageName] = number_format($languageValue / $totalNumberOfLines * 100, 4);
             }
 
             // Also getting main Language
@@ -88,24 +105,53 @@ class GitHubService implements GitInterface
             ];
         }
 
-        //Get other kind of information
-        $name = $userData->name;
-        $profile = $userData->bio ?? "No bio information available.";
-        $website = $userData->blog ?? "No website available.";
-        $orgs = $organizationsData;
-        $repos = [
+        $this->reposData = [
             'reposData' => $reposData,
             'reposLanguageDetails' => $reposLanguageDetails,
-            'reposTotalNumber' => $reposTotalNumber,
         ];
+    }
+
+    public function _getReposData(): array
+    {
+        return $this->reposData;
+    }
+
+    /**
+     * @throws ClientExceptionInterfaceAlias
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws TransportExceptionInterface
+     */
+    public function _setOrgsData(): void
+    {
+        $this->orgsData = json_decode($this->client->request("GET", $this->_getUserData()->organizations_url . '?per_page=10',
+            ['auth_basic' => $this->parameters->get('app.github.auth')])->getContent(), true);
+    }
+
+    /**
+     * @return array
+     */
+    public function _getOrgsData(): array
+    {
+        return $this->orgsData;
+    }
+
+    /**
+     * @return User
+     */
+    public function getServiceData(): User
+    {
+        $userData = $this->_getUserData();
+        $reposData = $this->_getReposData();
+        $organizationsData = $this->_getOrgsData();
 
         // if user would have been a real entity validations would be present here before creation
         $user = new User();
-        $user->__setName($name);
-        $user->__setProfile($profile);
-        $user->__setWebsite($website);
-        $user->__setOrgs($orgs);
-        $user->__setRepos($repos);
+        $user->__setName($userData->name);
+        $user->__setProfile($userData->bio);
+        $user->__setWebsite($userData->blog);
+        $user->__setOrgs($organizationsData);
+        $user->__setRepos($reposData);
 
         return $user;
     }
