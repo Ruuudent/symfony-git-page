@@ -3,7 +3,15 @@
 namespace App\Entity;
 
 class User {
-    private $profile, $website, $repos;
+    private $profile, $website, $repos, $name;
+
+    public function __setName(string $name): void {
+        $this->name = $name;
+    }
+
+    public function __getName(): string {
+        return $this->name;
+    }
 
     public function __setProfile(string $profile): void {
         $this->profile = $profile;

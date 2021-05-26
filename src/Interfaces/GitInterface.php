@@ -8,5 +8,5 @@ Interface GitInterface
 {
     public function _setUserName(string $name): void;
     public function _getUserName(): string;
-    public function getUserData(): User;
+    public function getServiceData(): User;
 }

@@ -16,19 +16,34 @@
     <span id="profile">{{ profile }}</span>
 
     <hr>
-    <label for="profile">
-        Profile Description
-    </label>
-    <span id="profile">{{ profile }}</span>
-
-    <hr>
     <label for="website">
-        Website
+        Website Description
     </label>
     <span id="website">{{ website }}</span>
 
+    <hr>
+    <label>
+        Repos
+    </label>
+    <span>Total Number of repos: {{ repos['reposTotalNumber'] }}</span>
+    {% for repoName,repo in repos['reposData'] %}
+        <div class="row">
+            <div class="col-4">
+                Name: {{ repoName }}
+            </div>
+            <div class="col-4">
+                URL: {{ repo['url'] }}
+            </div>
+            <div class="col-4">
+                Languages:
+                {% for language in repos['reposLanguageDetails'][repoName]|languageName %}
+                    <span>{{ languageName }} : {{ language }} %</span>
+                    <hr>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
 
-    {{ repos }}
 </body>
 </html>
 
