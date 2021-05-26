@@ -3,7 +3,7 @@
 namespace App\Entity;
 
 class User {
-    private $profile, $website, $repos, $name;
+    private $profile, $website, $repos, $name, $orgs;
 
     public function __setName(string $name): void {
         $this->name = $name;
@@ -27,6 +27,14 @@ class User {
 
     public function __getWebsite(): string {
         return $this->website;
+    }
+
+    public function __setOrgs(array $orgs): void {
+        $this->orgs = $orgs;
+    }
+
+    public function __getOrgs(): array {
+        return $this->orgs;
     }
 
     public function __setRepos(array $repos): void {

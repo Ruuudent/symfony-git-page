@@ -51,10 +51,14 @@ class GitHubService implements GitInterface
         $userData = json_decode($this->client->request("GET", self::gitAPI . '/users/' . $this->_getUserName(),
             ['auth_basic' => $this->parameters->get('app.github.auth')])->getContent());
 
-        //Getting Repos Information --- getting only 10 to limit de data for test purposes
+        //Getting Repos Information --- getting only 10 to limit the data for test purposes
         $reposRaw = json_decode($this->client->request("GET", $userData->repos_url . '?per_page=10',
             ['auth_basic' => $this->parameters->get('app.github.auth')])->getContent());
         $reposTotalNumber = $userData->public_repos;
+
+        //Getting Organisations Information --- getting only 10 to limit the data for test purposes
+        $organizationsData = json_decode($this->client->request("GET", $userData->organizations_url . '?per_page=10',
+            ['auth_basic' => $this->parameters->get('app.github.auth')])->getContent(), true);
 
         $reposLanguageDetails = [];
         $reposData = [];
@@ -66,7 +70,8 @@ class GitHubService implements GitInterface
             $reposData[$repo->name] = $repo;
 
             // Setting the json encode to associative to return in array format
-            $languages = json_decode($this->client->request("GET", $repo->languages_url, ['auth_basic' => $this->parameters->get('app.github.auth')])->getContent(), true);
+            $languages = json_decode($this->client->request("GET", $repo->languages_url,
+                ['auth_basic' => $this->parameters->get('app.github.auth')])->getContent(), true);
             $totalNumberOfLines = array_sum($languages);
             $languagePercentages = [];
 
@@ -87,6 +92,7 @@ class GitHubService implements GitInterface
         $name = $userData->name;
         $profile = $userData->bio ?? "No bio information available.";
         $website = $userData->blog ?? "No website available.";
+        $orgs = $organizationsData;
         $repos = [
             'reposData' => $reposData,
             'reposLanguageDetails' => $reposLanguageDetails,
@@ -98,6 +104,7 @@ class GitHubService implements GitInterface
         $user->__setName($name);
         $user->__setProfile($profile);
         $user->__setWebsite($website);
+        $user->__setOrgs($orgs);
         $user->__setRepos($repos);
 
         return $user;

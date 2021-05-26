@@ -22,6 +22,13 @@
     <span id="website">{{ website }}</span>
 
     <hr>
+    <label for="orgs">
+        Organisations
+    </label>
+    {% for org in orgs %}
+        <span>{{ org['login'] }} : {{ org['description'] }}</span>
+    {% endfor %}
+    <hr>
     <label>
         Repos
     </label>
